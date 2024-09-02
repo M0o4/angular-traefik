@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik_c
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 8080:8080
+      - 443:443
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy
+  app-1:
+    build: ./app-1
+    container_name: app-1_c
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.app.entrypoints=web
+      - traefik.http.routers.app.rule=Host("app1.docker.localhost")
+    networks:
+      - proxy
+  app-2:
+    build: ./app-2
+    container_name: app-2_c
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.app2.entrypoints=web
+      - traefik.http.routers.app2.rule=Host("app2.docker.localhost")
+    networks:
+      - proxy
+networks:
+  proxy:
+    driver: bridge
